@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="User Account">
+		<EditTextPreference android:key="user"
+			android:title="User Name" android:summary="Your identi.ca screen name"
+			android:dialogTitle="Enter your identi.ca user name" />
+		<EditTextPreference android:key="password"
+			android:title="Password" android:summary="Your identi.ca account password"
+			android:password="true" android:dialogTitle="Enter your identi.ca password" />
+	</PreferenceCategory>
+</PreferenceScreen>

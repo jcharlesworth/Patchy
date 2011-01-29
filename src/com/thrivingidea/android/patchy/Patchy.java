@@ -1,33 +1,26 @@
 package com.thrivingidea.android.patchy;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-import org.json.JSONObject;
+import winterwell.jtwitter.Twitter;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
 public class Patchy extends Activity {
 	
-	private DefaultHttpClient client = null;
-	private EditText user = null;
-	private EditText password = null;
 	private EditText status = null;
+	private SharedPreferences prefs = null;
+	private Twitter client = null;
 	
     /** Called when the activity is first created. */
     @Override
@@ -35,45 +28,19 @@ public class Patchy extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        user = (EditText)findViewById(R.id.user);
-        password = (EditText)findViewById(R.id.password);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.registerOnSharedPreferenceChangeListener(prefListener);
+        
         status = (EditText)findViewById(R.id.status);
         
         Button send = (Button)findViewById(R.id.send);
         
         send.setOnClickListener(onSend);
-        
-        client = new DefaultHttpClient();
-    }
-    
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();
-    	
-    	client.getConnectionManager().shutdown();
-    }
-    
-    private String getCredentials() {
-    	String u = user.getText().toString();
-    	String p = password.getText().toString();
-    	
-    	return Base64.encodeBytes((u+":"+p).getBytes());
     }
     
     private void updateStatus() {
     	try {
-    		String s = status.getText().toString();
-    		HttpPost post = new HttpPost("https://identi.ca/api/statuses/update.json");
-    		
-    		post.addHeader("Authorization", "Basic " + getCredentials());
-    		
-    		List<NameValuePair> form = new ArrayList<NameValuePair>();
-    		form.add(new BasicNameValuePair("status", s));
-    		post.setEntity(new UrlEncodedFormEntity(form, HTTP.UTF_8));
-    		
-    		ResponseHandler<String> responseHandler = new BasicResponseHandler();
-    		String responseBody = client.execute(post, responseHandler);
-    		JSONObject response = new JSONObject(responseBody);
+    		getClient().updateStatus(status.getText().toString());
     	} catch (Throwable t) {
     		Log.e("Patchy", "Exception in updateStatus()", t);
     		goBlooey(t);
@@ -90,10 +57,51 @@ public class Patchy extends Activity {
     }
     
     private View.OnClickListener onSend = new View.OnClickListener() {
-		
-		@Override
 		public void onClick(View v) {
 			updateStatus();
 		}
 	};
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		new MenuInflater(getApplication()).inflate(R.menu.option, menu);
+		
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.prefs){
+			startActivity(new Intent(this, EditPreferences.class));
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	private SharedPreferences.OnSharedPreferenceChangeListener prefListener =
+		new SharedPreferences.OnSharedPreferenceChangeListener() { 
+			
+		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+				String key) {
+			if (key.equals("user") || key.equals("password")) {
+				resetClient();
+			}
+		}
+	};
+	
+	synchronized private Twitter getClient() {
+		if (client == null) {
+			client = new Twitter(prefs.getString("user", ""),
+					prefs.getString("password", ""));
+			
+			client.setAPIRootUrl("https://identi.ca/api");
+		}
+		
+		return client;
+	}
+	
+	synchronized private void resetClient() {
+		client = null;
+	}
+		
 }

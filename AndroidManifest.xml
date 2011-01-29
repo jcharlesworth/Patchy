@@ -23,6 +23,13 @@
 			</intent-filter>
 		</activity>
 
+		<activity
+			android:name=".EditPreferences">
+		</activity>
+
+		<service
+			android:name=".PostMonitor" />
+
 	</application>
 	<uses-sdk
 		android:minSdkVersion="7" />

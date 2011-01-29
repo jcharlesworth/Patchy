@@ -6,19 +6,6 @@
 	android:stretchColumns="1">
 	<TableRow>
 		<TextView
-			android:text="User Name:" />
-		<EditText
-			android:id="@+id/user" />
-	</TableRow>
-	<TableRow>
-		<TextView
-			android:text="Password:" />
-		<EditText
-			android:id="@+id/password"
-			android:password="true" />
-	</TableRow>
-	<TableRow>
-		<TextView
 			android:text="Status:" />
 		<EditText
 			android:id="@+id/status"
